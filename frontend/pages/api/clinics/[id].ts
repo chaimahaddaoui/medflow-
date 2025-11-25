@@ -1,4 +1,3 @@
-// /pages/api/clinics/[id].ts
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 

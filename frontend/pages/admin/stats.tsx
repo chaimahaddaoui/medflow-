@@ -1,4 +1,10 @@
 import { useEffect, useState } from 'react';
+import {
+  UserGroupIcon,
+  UserIcon,
+  CurrencyDollarIcon,
+  CalendarDaysIcon
+} from "@heroicons/react/24/outline";
 
 interface Stats {
   totalPatients: number;
@@ -20,58 +26,88 @@ export default function StatisticsAdmin() {
 
   if (!stats) return <div className="p-8">Chargement…</div>;
 
+  const cards = [
+    {
+      label: "Patients",
+      value: stats.totalPatients,
+      icon: <UserGroupIcon className="h-8 w-8 text-blue-600" />
+    },
+    {
+      label: "Médecins",
+      value: stats.totalDoctors,
+      icon: <UserIcon className="h-8 w-8 text-green-600" />
+    },
+    {
+      label: "Revenus (DT)",
+      value: stats.totalRevenu,
+      icon: <CurrencyDollarIcon className="h-8 w-8 text-yellow-600" />
+    },
+    {
+      label: "RDV ce mois",
+      value: stats.rdvThisMonth,
+      icon: <CalendarDaysIcon className="h-8 w-8 text-purple-600" />
+    },
+  ];
+
   return (
-    <div className="p-8">
-      <h2 className="text-2xl font-bold mb-6">Statistiques administrateur</h2>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 shadow rounded">
-          <div className="text-gray-500 text-sm">Patients</div>
-          <div className="text-3xl font-bold">{stats.totalPatients}</div>
-        </div>
-        <div className="bg-white p-6 shadow rounded">
-          <div className="text-gray-500 text-sm">Médecins</div>
-          <div className="text-3xl font-bold">{stats.totalDoctors}</div>
-        </div>
-        <div className="bg-white p-6 shadow rounded">
-          <div className="text-gray-500 text-sm">Revenus (total €)</div>
-          <div className="text-3xl font-bold">{stats.totalRevenu}</div>
-        </div>
-        <div className="bg-white p-6 shadow rounded">
-          <div className="text-gray-500 text-sm">RDV ce mois</div>
-          <div className="text-3xl font-bold">{stats.rdvThisMonth}</div>
-        </div>
+    <div className="p-8 min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100">
+      <h2 className="text-3xl font-bold mb-8 text-gray-800">📊 Tableau de bord - Statistiques</h2>
+
+      {/* CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {cards.map((c) => (
+          <div
+            key={c.label}
+            className="bg-white rounded-2xl p-6 shadow hover:shadow-lg transition-all flex items-center gap-4"
+          >
+            <div className="p-3 rounded-xl bg-gray-100">
+              {c.icon}
+            </div>
+            <div>
+              <p className="text-gray-500 text-sm">{c.label}</p>
+              <p className="text-3xl font-bold text-gray-800">{c.value}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {/* Exemples de graphiques simples */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 shadow rounded">
-          <h3 className="font-bold mb-2">Répartition des statuts RDV</h3>
-          {/* Ajoute ici un graphique avec Chart.js, Recharts, ou donne juste les % */}
-          <table className="w-full text-sm mt-4">
+      {/* GRAPHIQUES / TABLEAUX */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+        {/* RDV PAR STATUT */}
+        <div className="bg-white rounded-2xl p-6 shadow">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">
+            Répartition des statuts des RDV
+          </h3>
+          <table className="w-full text-sm">
             <tbody>
               {Object.entries(stats.rdvParStatut).map(([statut, count]) => (
-                <tr key={statut}>
-                  <td>{statut}</td>
-                  <td className="text-right">{count}</td>
+                <tr key={statut} className="border-b last:border-none">
+                  <td className="p-2 font-medium text-gray-600">{statut}</td>
+                  <td className="p-2 text-right font-bold text-gray-800">{count}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="bg-white p-6 shadow rounded">
-          <h3 className="font-bold mb-2">Revenus par mois (dernier an)</h3>
-          {/* Ici tu peux intégrer un graphique, ou un tableau */}
-          <table className="w-full text-sm mt-4">
+
+        {/* REVENUS PAR MOIS */}
+        <div className="bg-white rounded-2xl p-6 shadow">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">
+            Revenus par mois (12 derniers mois)
+          </h3>
+          <table className="w-full text-sm">
             <tbody>
               {Object.entries(stats.revenuParMois).map(([mois, chiffre]) => (
-                <tr key={mois}>
-                  <td>{mois}</td>
-                  <td className="text-right">{chiffre} €</td>
+                <tr key={mois} className="border-b last:border-none">
+                  <td className="p-2 capitalize text-gray-600">{mois}</td>
+                  <td className="p-2 text-right font-bold text-gray-800">{chiffre} DT</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+
       </div>
     </div>
   );

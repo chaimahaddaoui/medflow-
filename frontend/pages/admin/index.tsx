@@ -54,10 +54,12 @@ export default function AdminDashboard() {
         </div>
         <nav className="flex-1 mt-4 flex flex-col space-y-2 px-4">
           <a href="/admin" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">📊 Dashboard</a>
+          <a href="/admin/specialites" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">🩺 Spécialités</a>
           <a href="/admin/clinics" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">🏥 Cliniques</a>
           <a href="/admin/patients" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">👥 Patients</a>
           <a href="/admin/doctors" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">🩺 Médecins</a>
-          <a href="/admin/appointments" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">📅 Rendez-vous</a>
+          <a href="/admin/receptionists" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">🛎️ Réceptionnistes</a>
+          
           <a href="/admin/bills" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">💰 Factures</a>
           <a href="/admin/stats" className="p-2 hover:bg-blue-700 rounded flex items-center gap-2">📈 Statistiques</a>
         </nav>

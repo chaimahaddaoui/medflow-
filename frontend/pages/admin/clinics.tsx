@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Clinic = {
   id: number;
@@ -11,15 +12,41 @@ type Clinic = {
   createdAt?: string;
 };
 
+type SpecialityCentral = {
+  id: number;
+  label: string;
+};
+
 export default function ClinicsPage() {
   const [clinics, setClinics] = useState<Clinic[]>([]);
-  const [form, setForm] = useState({ nom: '', adresse: '', telephone: '', email: '', logo: '', horaires: '' });
+  const [specialities, setSpecialities] = useState<SpecialityCentral[]>([]);
+  const [form, setForm] = useState({
+    nom: '',
+    adresse: '',
+    telephone: '',
+    email: '',
+    logo: '',
+    horaires: '',
+    specialiteIds: [] as number[]
+  });
   const [msg, setMsg] = useState('');
+
   useEffect(() => {
     fetch('/api/clinics').then(r => r.json()).then(d => setClinics(d.clinics ?? []));
+    fetch('/api/specialitecentrales').then(r => r.json()).then(d => setSpecialities(d.specialities ?? []));
   }, []);
 
   const handleChange = (e: any) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
+
+  const handleSpecialityChange = (e: any) => {
+    const selectedId = Number(e.target.value);
+    setForm(f => ({
+      ...f,
+      specialiteIds: e.target.checked
+        ? [...f.specialiteIds, selectedId]
+        : f.specialiteIds.filter(id => id !== selectedId)
+    }));
+  };
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
@@ -30,7 +57,7 @@ export default function ClinicsPage() {
     });
     if (res.ok) {
       setMsg("Clinique ajoutée !");
-      setForm({ nom: '', adresse: '', telephone: '', email: '', logo: '', horaires: '' });
+      setForm({ nom: '', adresse: '', telephone: '', email: '', logo: '', horaires: '', specialiteIds: [] });
       const r = await res.json();
       setClinics(cs => [...cs, r.clinic]);
     } else {
@@ -40,8 +67,13 @@ export default function ClinicsPage() {
 
   return (
     <div className="p-8 max-w-3xl mx-auto">
+      <Link href="/admin">
+        <button className="mb-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
+          ← Retour au Dashboard
+        </button>
+      </Link>
       <h1 className="text-2xl font-bold mb-6 text-blue-900">Gestion des cliniques</h1>
-      {msg && <div className="mb-4">{msg}</div>}
+      {msg && <div className="mb-4 p-3 bg-green-100 text-green-800 rounded">{msg}</div>}
       <form className="mb-8 space-y-3 bg-white p-6 rounded shadow" onSubmit={handleSubmit}>
         <div className="flex gap-4">
           <input name="nom" required placeholder="Nom clinique" className="border p-2 rounded w-full" value={form.nom} onChange={handleChange} />
@@ -54,6 +86,23 @@ export default function ClinicsPage() {
         <div className="flex gap-4">
           <input name="logo" placeholder="URL Logo (option)" className="border p-2 rounded w-full" value={form.logo} onChange={handleChange} />
           <input name="horaires" placeholder="Horaires (option)" className="border p-2 rounded w-full" value={form.horaires} onChange={handleChange} />
+        </div>
+        <div className="bg-blue-50 p-4 rounded">
+          <label className="block font-semibold mb-3">Sélectionner les spécialités :</label>
+          <div className="grid grid-cols-2 gap-3">
+            {specialities.map(s => (
+              <label key={s.id} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  value={s.id}
+                  checked={form.specialiteIds.includes(s.id)}
+                  onChange={handleSpecialityChange}
+                  className="w-4 h-4"
+                />
+                <span>{s.label}</span>
+              </label>
+            ))}
+          </div>
         </div>
         <button className="bg-green-700 text-white px-4 py-2 rounded font-bold mt-3">Ajouter clinique</button>
       </form>

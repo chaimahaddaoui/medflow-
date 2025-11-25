@@ -57,12 +57,14 @@ model Clinic {
   specialites Speciality[] // RELATION 
   createdAt   DateTime     @default(now())
   doctors     Doctor[]
+  receptionist Receptionist[]
 }
 
 
 model Speciality {
   id       Int      @id @default(autoincrement())
   label    String
+  description String? 
   clinicId Int
   clinic   Clinic   @relation(fields: [clinicId], references: [id])
   doctors  Doctor[] // OK car relation symétrique ci-dessous
@@ -80,3 +82,20 @@ model Doctor {
   clinic       Clinic?       @relation(fields: [clinicId], references: [id])
 }
 
+model SpecialityCentral {
+  id          Int    @id @default(autoincrement())
+  label       String
+  description String?
+}
+
+model Receptionist {
+  id        Int      @id @default(autoincrement())
+  nom       String
+  prenom    String
+  email     String   @unique
+  password  String
+  telephone String?
+  clinicId  Int
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  createdAt DateTime @default(now())
+}

@@ -1,17 +1,27 @@
-/* // frontend/pages/api/receptionist/index.ts
+
+
 import { PrismaClient } from '@prisma/client';
 import nodemailer from 'nodemailer';
+import bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+/* ----------------------------------------------------
+   FONCTION: Générer un mot de passe temporaire
+---------------------------------------------------- */
+function generateTempPassword() {
+  return Math.random().toString(36).slice(-10); // ex: "f93k2h8xza"
+}
 
-async function sendAccountMail(to: any, prenom: any, emailAccount: any, password: any) {
-  // Création du transporteur SMTP avec tes infos .env
+/* ----------------------------------------------------
+   FONCTION: Envoi d'email
+---------------------------------------------------- */
+async function sendAccountMail(to: string, prenom: string, emailAccount: string, tempPassword: string) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
+      user: process.env.SMTP_USER, // ton email Gmail
+      pass: process.env.SMTP_PASS  // mot de passe d'application Gmail
     }
   });
 
@@ -19,105 +29,85 @@ async function sendAccountMail(to: any, prenom: any, emailAccount: any, password
     from: `"Medflow Admin" <${process.env.SMTP_USER}>`,
     to,
     subject: "[Medflow] Accès réceptionniste",
-    text: `Bonjour ${prenom},\n\nVotre compte a été créé !\nEmail : ${emailAccount}\nMot de passe : ${password}\nConnectez-vous sur l’application.`,
-    html: `<b>Bonjour ${prenom}</b>,<br>Votre compte de réceptionniste Medflow a été créé.<br><b>Email :</b> ${emailAccount}<br><b>Mot de passe :</b> ${password}<br><br>Connectez-vous sur le site.`
+    html: `
+      <div style="font-family: Arial; line-height: 1.5;">
+        <h2>Bonjour ${prenom},</h2>
+        <p>Votre compte a été créé avec succès.</p>
+
+        <h3>Informations de connexion</h3>
+        <p><b>Email :</b> ${emailAccount}</p>
+        <p><b>Mot de passe temporaire :</b> ${tempPassword}</p>
+
+        <p style="color:red;">⚠ Merci de changer votre mot de passe après la première connexion.</p>
+
+        <p>Cordialement,<br>L'équipe Medflow</p>
+      </div>
+    `
   });
+
+  console.log("📧 Email envoyé à :", to);
 }
 
-
-
-export default async function handler(req: { method: string; body: { nom: any; prenom: any; email: any; password: any; telephone: any; clinicId: any; }; }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { receptionists?: ({ clinic: { nom: string; adresse: string; telephone: string; email: string; logo: string | null; horaires: string | null; id: number; createdAt: Date; }; } & { nom: string; telephone: string | null; email: string; id: number; password: string; prenom: string; clinicId: number; createdAt: Date; })[]; receptionist?: { nom: string; telephone: string | null; email: string; id: number; password: string; prenom: string; clinicId: number; createdAt: Date; }; error?: string; detail?: string; }): void; new(): any; }; end: { (): void; new(): any; }; }; }) {
-  if (req.method === 'GET') {
-    const receptionists = await prisma.receptionist.findMany({ include: { clinic: true } });
-    res.status(200).json({ receptionists });
-  } else if (req.method === 'POST') {
-    const { nom, prenom, email, password, telephone, clinicId } = req.body;
-    try {
-      const receptionist = await prisma.receptionist.create({
-        data: { nom, prenom, email, password, telephone, clinicId: Number(clinicId) }
-      });
-      
-      await sendAccountMail(email, prenom, email, password);
-
-      res.status(201).json({ receptionist });
-    } catch (error) {
-      console.error("Erreur nodemailer ou post:", error);
-      res.status(500).json({ error: "Erreur création", detail: error instanceof Error ? error.message : String(error) });
-    }
-  } else {
-    res.status(405).end();
-  }
-}
- */
-import { PrismaClient } from '@prisma/client';
-import nodemailer from 'nodemailer';
-const prisma = new PrismaClient();
-
-async function sendAccountMail(to: string, prenom: string, emailAccount: string, password: string) {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS // mot de passe d'application Gmail
-      }
-    });
-
-    await transporter.sendMail({
-      from: `"Medflow Admin" <${process.env.SMTP_USER}>`,
-      to,
-      subject: "[Medflow] Accès réceptionniste",
-      text: `Bonjour ${prenom},\n\nVotre compte a été créé !\nEmail : ${emailAccount}\nMot de passe : ${password}\nConnectez-vous sur l’application.`,
-      html: `<b>Bonjour ${prenom}</b>,<br>Votre compte de réceptionniste Medflow a été créé.<br><b>Email :</b> ${emailAccount}<br><b>Mot de passe :</b> ${password}<br><br>Connectez-vous sur le site.`
-    });
-
-    console.log("Email envoyé à", to);
-  } catch (err) {
-    console.error("Erreur lors de l'envoi de l'email:", err);
-    throw new Error("Impossible d'envoyer l'email");
-  }
-}
-
+/* ----------------------------------------------------
+   HANDLER API
+---------------------------------------------------- */
 export default async function handler(req: any, res: any) {
+
+  // Récupérer tous les réceptionnistes
   if (req.method === 'GET') {
-    const receptionists = await prisma.receptionist.findMany({ include: { clinic: true } });
+    const receptionists = await prisma.receptionist.findMany({
+      include: { clinic: true }
+    });
     return res.status(200).json({ receptionists });
-  } else if (req.method === 'POST') {
-    const { nom, prenom, email, password, telephone, clinicId } = req.body;
+  }
+
+  // Ajouter un nouveau réceptionniste
+  if (req.method === 'POST') {
+    const { nom, prenom, email, telephone, clinicId } = req.body;
 
     try {
-      // Vérifier si l'email existe déjà
-      const existing = await prisma.receptionist.findUnique({ where: { email } });
-      if (existing) {
+      // 1️⃣ Vérifier si email déjà utilisé
+      const exists = await prisma.receptionist.findUnique({ where: { email } });
+      if (exists) {
         return res.status(400).json({ error: "Cet email est déjà utilisé." });
       }
 
-      // Créer le réceptionniste
+      // 2️⃣ Générer un mot de passe temporaire
+      const tempPassword = generateTempPassword();
+
+      // 3️⃣ Hacher le mot de passe
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+      // 4️⃣ Enregistrer en base
       const receptionist = await prisma.receptionist.create({
-        data: { nom, prenom, email, password, telephone, clinicId: Number(clinicId) }
+        data: {
+          nom,
+          prenom,
+          email,
+          telephone,
+          password: hashedPassword,
+          clinicId: Number(clinicId)
+        }
       });
 
-      // Essayer d'envoyer l'email
-      try {
-        await sendAccountMail(email, prenom, email, password);
-      } catch (mailError) {
-        console.error(mailError);
-        return res.status(201).json({ 
-          receptionist, 
-          message: "Réceptionniste créé, mais l'email n'a pas pu être envoyé." 
-        });
-      }
+      // 5️⃣ Envoyer l'email
+      await sendAccountMail(email, prenom, email, tempPassword);
 
-      return res.status(201).json({ 
-        receptionist, 
-        message: "Réceptionniste ajouté et email envoyé !" 
+      return res.status(201).json({
+        message: "Réceptionniste créé + email envoyé",
+        receptionist
       });
 
-    } catch (error) {
-      console.error("Erreur création réceptionniste:", error);
-      return res.status(500).json({ error: "Erreur création", detail: error instanceof Error ? error.message : String(error) });
+    } catch (error: any) {
+      console.error("❌ Erreur création réceptionniste :", error);
+      return res.status(500).json({
+        error: "Erreur création",
+        detail: error.message
+      });
     }
-  } else {
-    res.status(405).end();
   }
+
+  // Méthode non autorisée
+  res.setHeader('Allow', ['GET', 'POST']);
+  return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

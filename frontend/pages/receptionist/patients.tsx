@@ -13,7 +13,7 @@ export default function PatientsPage() {
         <a href="/receptionist/patients/new" className="bg-blue-700 text-white px-4 py-2 font-bold rounded shadow hover:bg-blue-800">+ Nouveau patient</a>
       </div>
       <table className="w-full text-left text-sm shadow bg-white rounded">
-        <thead><tr className="bg-blue-50"><th className="p-3">Nom</th><th className="p-3">Prénom</th><th className="p-3">Email</th><th className="p-3">Date naissance</th><th className="p-3">Téléphone</th></tr></thead>
+        <thead><tr className="bg-blue-50"><th className="p-3">Nom</th><th className="p-3">Prénom</th><th className="p-3">Email</th><th className="p-3">Date naissance</th><th className="p-3">clinic</th><th className="p-3">Téléphone </th></tr> </thead>
         <tbody>
           {patients.map(p => (
             <tr key={p.id} className="border-b hover:bg-gray-50 cursor-pointer" onClick={() => window.location.href = `/receptionist/patients/${p.id}`}>
@@ -22,6 +22,7 @@ export default function PatientsPage() {
               <td className="p-3">{p.email}</td>
               <td className="p-3">{new Date(p.dateNaissance).toLocaleDateString()}</td>
               <td className="p-3">{p.telephone ?? '-'}</td>
+              
             </tr>
           ))}
         </tbody>

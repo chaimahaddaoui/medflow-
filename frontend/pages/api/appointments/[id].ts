@@ -1,23 +1,33 @@
-import { PrismaClient } from '@prisma/client';
+// pages/api/appointments/[id].ts
+import type { NextApiRequest, NextApiResponse } from "next";
+import { PrismaClient } from "@prisma/client";
+
 const prisma = new PrismaClient();
 
-export default async function handler(req: { query: { id: any; }; method: string; body: { statut: any; }; }, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { appointment?: { id: number; date: Date; heure: string; statut: string; patientId: number; doctorId: number; }; error?: string; cause?: string; }): void; new(): any; }; end: { (): void; new(): any; }; }; }) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const id = Number(req.query.id);
-  if (req.method === 'PUT') {
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "ID invalide" });
+  }
+
+  if (req.method === "PUT") {
     const { statut } = req.body;
-    console.log("API PUT statut", { id, statut, body: req.body });
+    if (!statut) {
+      return res.status(400).json({ error: "statut obligatoire" });
+    }
+
     try {
       const rdv = await prisma.appointment.update({
         where: { id },
         data: { statut },
       });
-      res.status(200).json({ appointment: rdv });
-    } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : String(e);
-      console.error("Erreur détail:", e);
-      res.status(500).json({ error: "Erreur de mise à jour", cause: errorMessage });
+      return res.status(200).json({ appointment: rdv });
+    } catch (e) {
+      console.error("Erreur update rendez-vous:", e);
+      return res.status(500).json({ error: "Erreur de mise à jour" });
     }
-  } else {
-    res.status(405).end();
   }
+
+  res.setHeader("Allow", ["PUT"]);
+  return res.status(405).end();
 }

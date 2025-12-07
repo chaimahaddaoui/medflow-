@@ -1,46 +1,42 @@
-// pages/receptionist/appointments/index.tsx
 import { useEffect, useState } from "react";
 
 type Appointment = {
   id: number;
-  patient: { nom: string; prenom: string };
   doctor: { nom: string };
   date: string;
   heure: string;
   statut: string;
 };
 
-export default function AppointmentsReception() {
+export default function PatientAppointmentsPage() {
+  // TODO : remplacer par l'id du patient connecté (auth plus tard)
+  const patientId = 1;
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [msg, setMsg] = useState("");
 
   const fetchAppointments = () => {
-    fetch("/api/appointments")
+    fetch(`/api/appointments?patientId=${patientId}`)
       .then((r) => r.json())
       .then((d) => setAppointments(d.appointments ?? []))
-      .catch(() => setMsg("Erreur lors du chargement des rendez-vous."));
+      .catch(() =>
+        setMsg("Erreur lors du chargement de vos rendez-vous.")
+      );
   };
 
-  useEffect(fetchAppointments, []);
+  useEffect(fetchAppointments, [patientId]);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-blue-900">Rendez-vous</h1>
-        <a
-          href="/receptionist/appointments/new"
-          className="bg-blue-700 text-white font-bold px-4 py-2 rounded shadow hover:bg-blue-800"
-        >
-          + Nouveau rendez-vous
-        </a>
-      </div>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold text-blue-900 mb-6">
+        Mes rendez-vous
+      </h1>
 
       {msg && <div className="mb-4 text-red-600 font-bold">{msg}</div>}
 
       <table className="w-full text-left text-sm shadow bg-white rounded">
         <thead>
           <tr className="bg-blue-50">
-            <th className="p-3">Patient</th>
             <th className="p-3">Médecin</th>
             <th className="p-3">Date</th>
             <th className="p-3">Heure</th>
@@ -50,9 +46,6 @@ export default function AppointmentsReception() {
         <tbody>
           {appointments.map((ap) => (
             <tr key={ap.id} className="border-b hover:bg-gray-50">
-              <td className="p-3">
-                {ap.patient?.nom} {ap.patient?.prenom}
-              </td>
               <td className="p-3">{ap.doctor?.nom}</td>
               <td className="p-3">
                 {new Date(ap.date).toLocaleDateString("fr-FR")}

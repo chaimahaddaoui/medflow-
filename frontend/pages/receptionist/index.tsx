@@ -1,3 +1,4 @@
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
 type Appointment = {
@@ -10,6 +11,7 @@ type Appointment = {
 };
 
 export default function ReceptionDashboard() {
+  const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +23,17 @@ export default function ReceptionDashboard() {
         setLoading(false);
       });
   }, []);
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // on ignore les erreurs pour l’instant
+    }
+    // si plus tard tu stockes l'utilisateur dans localStorage :
+    // localStorage.removeItem("user");
+    router.push("/login");
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
@@ -32,9 +45,10 @@ export default function ReceptionDashboard() {
           <a href="/receptionist/dashboard" className="p-2 hover:bg-blue-700 rounded">🏠 Accueil</a>
           <a href="/receptionist/patients" className="p-2 hover:bg-blue-700 rounded">👥 Patients</a>
           <a href="/receptionist/appointments" className="p-2 hover:bg-blue-700 rounded">📅 Rendez-vous</a>
+
           {/* ...autres liens */}
         </nav>
-        <button className="m-4 p-2 bg-blue-700 hover:bg-blue-600 rounded">Se déconnecter</button>
+        <button onClick={handleLogout} className="m-4 p-2 bg-blue-700 hover:bg-blue-600 rounded">Se déconnecter</button>
       </aside>
       <main className="ml-56 flex-1 p-8">
         <h1 className="text-2xl font-bold mb-6 text-blue-900">Dashboard Réception</h1>

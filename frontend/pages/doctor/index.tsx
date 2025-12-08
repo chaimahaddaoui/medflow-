@@ -1,5 +1,6 @@
 // pages/doctor/index.tsx
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 type TodayAppointment = {
   id: number;
@@ -18,6 +19,7 @@ type DoctorDashboardData = {
 export default function DoctorDashboard() {
   const [data, setData] = useState<DoctorDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/doctors/dashboard")
@@ -32,6 +34,16 @@ export default function DoctorDashboard() {
       });
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("Erreur logout:", e);
+    }
+    // plus tard : localStorage.removeItem("user");
+    router.push("/login");
+  };
+
   if (loading) return <div className="p-8">Chargement...</div>;
   if (!data) return <div className="p-8">Aucune donnée.</div>;
 
@@ -43,24 +55,42 @@ export default function DoctorDashboard() {
           MedFlow
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <a href="/doctor" className="block px-3 py-2 rounded bg-blue-800">
+          <a
+            href="/doctor"
+            className="block px-3 py-2 rounded bg-blue-800"
+          >
             Accueil
           </a>
-          <a href="/doctor/patients" className="block px-3 py-2 rounded hover:bg-blue-800">
+          <a
+            href="/doctor/patients"
+            className="block px-3 py-2 rounded hover:bg-blue-800"
+          >
             Dossiers patients
           </a>
-          <a href="/doctor/agenda" className="block px-3 py-2 rounded hover:bg-blue-800">
+          <a
+            href="/doctor/agenda"
+            className="block px-3 py-2 rounded hover:bg-blue-800"
+          >
             Agenda
           </a>
-          <a href="/doctor/appointments/new" className="block px-3 py-2 rounded hover:bg-blue-800">
+          <a
+            href="/doctor/appointments/new"
+            className="block px-3 py-2 rounded hover:bg-blue-800"
+          >
             Rendez-vous
           </a>
 
-          <a href="/doctor/prescriptions" className="block px-3 py-2 rounded hover:bg-blue-800">
+          <a
+            href="/doctor/prescriptions"
+            className="block px-3 py-2 rounded hover:bg-blue-800"
+          >
             Ordonnances
           </a>
         </nav>
-        <button className="m-4 mt-auto bg-blue-700 hover:bg-blue-600 text-white font-semibold py-2 rounded">
+        <button
+          onClick={handleLogout}
+          className="m-4 mt-auto bg-blue-700 hover:bg-blue-600 text-white font-semibold py-2 rounded"
+        >
           Se déconnecter
         </button>
       </aside>
@@ -88,7 +118,9 @@ export default function DoctorDashboard() {
           </div>
 
           <div className="bg-blue-100 rounded shadow p-6 text-center">
-            <p className="text-sm text-gray-600 mb-2">TOTAL RDV AUJOURD&apos;HUI</p>
+            <p className="text-sm text-gray-600 mb-2">
+              TOTAL RDV AUJOURD&apos;HUI
+            </p>
             <p className="text-4xl font-bold text-blue-700">
               {data.totalRdvAujourdhui}
             </p>
@@ -151,7 +183,10 @@ export default function DoctorDashboard() {
               ))}
               {data.rdvDuJour.length === 0 && (
                 <tr>
-                  <td className="p-3 text-center text-gray-500" colSpan={4}>
+                  <td
+                    className="p-3 text-center text-gray-500"
+                    colSpan={4}
+                  >
                     Aucun rendez-vous pour aujourd&apos;hui.
                   </td>
                 </tr>

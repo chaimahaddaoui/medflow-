@@ -1,10 +1,10 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model Patient {
@@ -12,41 +12,39 @@ model Patient {
   nom           String
   prenom        String
   email         String         @unique
-  password      String?
   dateNaissance DateTime
   telephone     String?
   adresse       String?
+  password      String?
+  clinicId      Int?
   appointments  Appointment[]
   bills         Bill[]
-  clinicId      Int?
   clinic        Clinic?        @relation(fields: [clinicId], references: [id])
   prescriptions Prescription[]
 }
 
 model Appointment {
-  id        Int      @id @default(autoincrement())
-  date      DateTime
-  heure     String
-  statut    String
-  patientId Int
-  doctorId  Int
-
-  patient       Patient        @relation(fields: [patientId], references: [id])
+  id            Int            @id @default(autoincrement())
+  date          DateTime
+  heure         String
+  statut        String
+  patientId     Int
+  doctorId      Int
   doctor        Doctor         @relation(fields: [doctorId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
   bills         Bill[]
   prescriptions Prescription[]
 }
 
 model Bill {
-  id            Int      @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   montant       Float
   statut        String
-  dateCreation  DateTime @default(now())
+  dateCreation  DateTime     @default(now())
   patientId     Int
   appointmentId Int?
-
-  patient     Patient      @relation(fields: [patientId], references: [id])
-  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  patient       Patient      @relation(fields: [patientId], references: [id])
 }
 
 model Clinic {
@@ -57,36 +55,36 @@ model Clinic {
   email        String
   logo         String?
   horaires     String?
-  specialites  Speciality[]
   createdAt    DateTime       @default(now())
   doctors      Doctor[]
-  receptionist Receptionist[]
   patients     Patient[]
+  receptionist Receptionist[]
+  specialites  Speciality[]
 }
 
 model Speciality {
   id          Int      @id @default(autoincrement())
   label       String
-  description String?
   clinicId    Int
-  clinic      Clinic   @relation(fields: [clinicId], references: [id])
+  description String?
   doctors     Doctor[]
+  clinic      Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Doctor {
-  id            Int            @id @default(autoincrement())
-  nom           String
-  prenom        String
-  specialiteId  Int?
-  specialite    Speciality?    @relation(fields: [specialiteId], references: [id])
-  email         String         @unique
-  password      String         @default("changeme123")
-  telephone     String?
-  appointments  Appointment[]
-  clinicId      Int?
-  clinic        Clinic?        @relation(fields: [clinicId], references: [id])
-  prescriptions Prescription[]
+  id             Int                  @id @default(autoincrement())
+  nom            String
+  prenom         String
+  email          String               @unique
+  telephone      String?
+  clinicId       Int?
+  specialiteId   Int?
+  password       String               @default("changeme123")
+  appointments   Appointment[]
+  clinic         Clinic?              @relation(fields: [clinicId], references: [id])
+  specialite     Speciality?          @relation(fields: [specialiteId], references: [id])
   availabilities DoctorAvailability[]
+  prescriptions  Prescription[]
 }
 
 model SpecialityCentral {
@@ -103,45 +101,39 @@ model Receptionist {
   password  String
   telephone String?
   clinicId  Int
-  clinic    Clinic   @relation(fields: [clinicId], references: [id])
   createdAt DateTime @default(now())
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
 }
 
 model Prescription {
   id            Int          @id @default(autoincrement())
   createdAt     DateTime     @default(now())
-  doctor        Doctor       @relation(fields: [doctorId], references: [id])
   doctorId      Int
-  patient       Patient      @relation(fields: [patientId], references: [id])
   patientId     Int
-  // optionnel : lier directement à un rendez-vous
-  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
   appointmentId Int?
-
-  // Contenu de l’ordonnance
-  medicaments String // ex: JSON ou texte libre (liste des médicaments)
-  notes       String? // recommandations supplémentaires
+  medicaments   String
+  notes         String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  doctor        Doctor       @relation(fields: [doctorId], references: [id])
+  patient       Patient      @relation(fields: [patientId], references: [id])
 }
-
 
 model DoctorAvailability {
   id        Int      @id @default(autoincrement())
-  doctor    Doctor   @relation(fields: [doctorId], references: [id])
   doctorId  Int
-
   start     DateTime
   end       DateTime
-
-  type      String?  // ex: "Consultation", "Contrôle", etc.
+  type      String?
   note      String?
-
   createdAt DateTime @default(now())
+  doctor    Doctor   @relation(fields: [doctorId], references: [id])
 }
+
 model Admin {
-  id       Int    @id @default(autoincrement())
-  nom      String
-  prenom   String
-  email    String @unique
-  password String
+  id        Int      @id @default(autoincrement())
+  nom       String
+  prenom    String
+  email     String   @unique
+  password  String
   createdAt DateTime @default(now())
 }

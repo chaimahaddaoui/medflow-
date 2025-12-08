@@ -33,13 +33,21 @@ export default function LoginPage() {
       return;
     }
 
-    // data.role = "patient" | "doctor" | "receptionist" | "admin"
-    if (data.role === "patient") router.push("/patient");
-    else if (data.role === "doctor") router.push("/doctor");
-    else if (data.role === "receptionist") router.push("/receptionist");
-    else if (data.role === "admin") router.push("/admin");
-  };
-
+  // data.role = "patient" | "doctor" | "receptionist" | "admin"
+  if (data.role === "patient") {
+    localStorage.setItem("user", JSON.stringify(data));
+    router.push("/patient");
+  } else if (data.role === "doctor") {
+    localStorage.setItem("user", JSON.stringify(data));
+    router.push("/doctor");
+  } else if (data.role === "receptionist") {
+    localStorage.setItem("user", JSON.stringify(data));
+    router.push("/receptionist");
+  } else if (data.role === "admin") {
+    localStorage.setItem("user", JSON.stringify(data));
+    router.push("/admin");
+  }
+};
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <form

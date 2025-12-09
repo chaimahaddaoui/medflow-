@@ -1,36 +1,138 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MedFlow – Application de gestion de rendez‑vous médicaux
+## Description
 
-## Getting Started
+MedFlow est une application web fullstack destinée à la gestion des rendez‑vous médicaux et des dossiers patients pour une clinique ou un groupe de cliniques.
 
-First, run the development server:
+## Technologies utilisées
 
-```bash
+- **Next.js** (React + API Routes)
+- **TypeScript**
+- **PostgreSQL** + **Prisma**
+- **bcryptjs** pour le hashing des mots de passe
+- **pdfkit** pour la génération des PDF d’ordonnances
+- **nodemailer** pour l’envoi d’emails
+- **Tailwind CSS** pour le style
+
+
+
+## Installation
+
+
+### 1. Cloner le dépôt
+git clone <URL_DU_REPO>
+cd medflow/frontend
+
+### 2. Installer les dépendances
+npm install
+
+### 3. Configurer les variables d’environnement
+
+Créer un fichier `.env` dans `frontend` 
+
+DATABASE_URL="postgresql://user:password@localhost:5432/medflow"
+SMTP_USER="ton_email@gmail.com"
+SMTP_PASS="mot_de_passe_ou_app_password"
+APP_URL="http://localhost:3000"
+--> Adapter `user`, `password`, `host`, `port`, `dbname` selon ta base PostgreSQL.
+
+### 4. Initialiser la base de données
+npx prisma migrate dev --name init
+npx prisma generate
+
+###  Visualiser les données :
+npx prisma studio
+
+### 5. Lancer l’application
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+--> Application disponible sur :  
+`http://localhost:3000`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Structure principale
 
-## Learn More
+### Backend (API Next.js)
 
-To learn more about Next.js, take a look at the following resources:
+- `pages/api/auth/register.ts`  
+  Inscription patient avec :
+  - vérification de l’unicité de l’email,
+  - hashing du mot de passe (`bcrypt.hash`),
+  - association à une clinique (`clinicId`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `pages/api/auth/login.ts`  
+  Connexion :
+  - vérification email + mot de passe (`bcrypt.compare`),
+  - création de session / cookie (selon implémentation).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `pages/api/auth/logout.ts`  
+  Déconnexion.
 
-## Deploy on Vercel
+- `pages/api/patient/dashboard.ts`  
+  Retourne les données du **dashboard patient** pour un `patientId` donné :
+  - `stats` : `upcomingCount`, `confirmedCount`, `prescriptionsCount`, `clinicsCount`,
+  - `upcomingAppointments`,
+  - `lastPrescriptions`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `pages/api/patients/prescriptions/index.ts`  
+  Liste des ordonnances d’un patient (JSON).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `pages/api/patients/prescriptions/[id].ts`  
+  Détail d’une ordonnance (JSON) avec le médecin.
+
+- `pages/api/patients/prescriptions/[id]/pdf.ts`  
+  Génération **PDF** d’une ordonnance :
+  - récupère l’ordonnance + docteur + patient via Prisma,
+  - génère un PDF avec `pdfkit`,
+  - renvoie le PDF en téléchargement.
+
+### Frontend (pages Next.js)
+
+- `pages/login.tsx`  
+  Formulaire de connexion (email + mot de passe).
+
+- `pages/register.tsx`  
+  Formulaire d’inscription patient :
+  - champs personnels,
+  - `<select>` pour choisir une clinique (via `/api/clinics` si implémenté),
+  - envoi à `/api/auth/register`.
+
+- `pages/patient/index.tsx`  
+  Dashboard patient :
+  - `useEffect` → `fetch("/api/patient/dashboard?patientId=...")`,
+  - affichage des stats et des prochains rendez‑vous.
+
+- `pages/patient/prescriptions/index.tsx`  
+  Liste des ordonnances du patient (avec lien vers le détail).
+
+- `pages/patient/prescriptions/[id].tsx`  
+  Détail d’une ordonnance + bouton **“Télécharger en PDF
+
+
+
+## Exemple de modèle Prisma 
+model Clinic {
+id Int @id @default(autoincrement())
+nom String
+adresse String
+telephone String
+email String
+doctors Doctor[]
+patients Patient[]
+}
+
+## Sécurité
+
+- Mots de passe **hashés** avec `bcryptjs` avant enregistrement.
+- Authentification par email + mot de passe via API Next.js.
+- Filtrage des données par `patientId` pour les dashboards et ordonnances.
+
+## Comptes de test (exemple)
+
+À adapter à ta base de données :
+
+| Rôle           | Email              | Mot de passe |
+|----------------|--------------------|--------------|
+| Patient test   | ali@gmail.com      | patient123   |
+| Réceptionniste | reception@test.com | reception    |
+|  medecin       |  medecin@medecincom| medecin
+| admin         |chaimahadaoui11@gmail.com|chaimaadmin |

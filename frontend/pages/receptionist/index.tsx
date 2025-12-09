@@ -16,7 +16,7 @@ export default function ReceptionDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/appointments?today=1") // Crée/toEdit cette route pour n’afficher que les rdv du jour/recent!
+    fetch("/api/appointments?today=1") 
       .then((r) => r.json())
       .then((d) => {
         setAppointments(d.appointments || []);
@@ -27,10 +27,9 @@ export default function ReceptionDashboard() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {
-      // on ignore les erreurs pour l’instant
+      
     }
-    // si plus tard tu stockes l'utilisateur dans localStorage :
-    // localStorage.removeItem("user");
+   
     router.push("/login");
   };
 
@@ -81,7 +80,7 @@ export default function ReceptionDashboard() {
                     <th className="p-3">Médecin</th>
                     <th className="p-3">Heure</th>
                     <th className="p-3">Statut</th>
-                    <th className="p-3">Actions</th>
+                    
                   </tr>
                 </thead>
                 <tbody>
@@ -101,14 +100,7 @@ export default function ReceptionDashboard() {
                           {ap.statut}
                         </span>
                       </td>
-                      <td className="p-3">
-                        <button className="bg-green-500 hover:bg-green-700 text-white px-2 rounded mr-2">
-                          Valider
-                        </button>
-                        <button className="bg-red-500 hover:bg-red-700 text-white px-2 rounded">
-                          Annuler
-                        </button>
-                      </td>
+                      
                     </tr>
                   ))}
                 </tbody>

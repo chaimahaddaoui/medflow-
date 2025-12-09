@@ -16,17 +16,30 @@ type Prescription = {
 };
 
 export default function PatientPrescriptionsPage() {
-  const patientId = 1; // TODO: patient connecté
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    fetch(`/api/prescriptions?patientId=${patientId}`)
-      .then((r) => r.json())
-      .then((d) => setPrescriptions(d.prescriptions ?? []))
-      .catch(() =>
-        setMsg("Erreur lors du chargement de vos ordonnances.")
-      );
+    const fetchPrescriptions = async () => {
+      try {
+        const res = await fetch("/api/patients/prescriptions");
+        if (res.status === 401) {
+          setMsg("Vous devez être connecté pour voir vos ordonnances.");
+          return;
+        }
+        if (!res.ok) {
+          setMsg("Erreur lors du chargement de vos ordonnances.");
+          return;
+        }
+        const data = await res.json();
+        setPrescriptions(data.prescriptions ?? []);
+      } catch (e) {
+        console.error(e);
+        setMsg("Erreur lors du chargement de vos ordonnances.");
+      }
+    };
+
+    fetchPrescriptions();
   }, []);
 
   return (
@@ -36,13 +49,17 @@ export default function PatientPrescriptionsPage() {
           Mes ordonnances
         </h1>
 
-        {msg && <div className="mb-4 text-red-600 text-sm font-semibold">{msg}</div>}
+        {msg && (
+          <div className="mb-4 text-red-600 text-sm font-semibold">{msg}</div>
+        )}
 
-        {prescriptions.length === 0 ? (
+        {prescriptions.length === 0 && !msg ? (
           <p className="text-sm text-gray-600">
             Vous n&apos;avez pas encore d&apos;ordonnance.
           </p>
-        ) : (
+        ) : null}
+
+        {prescriptions.length > 0 && (
           <div className="space-y-3">
             {prescriptions.map((p) => (
               <a

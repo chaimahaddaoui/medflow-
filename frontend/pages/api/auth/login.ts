@@ -1,19 +1,40 @@
+
 // pages/api/auth/login.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { serialize } from "cookie";
 
 const prisma = new PrismaClient();
 
-type LoginResponse =
-  | {
-      role: "patient" | "doctor" | "receptionist" | "admin";
-      userId: number;
-      email: string;
-      nom: string;
-      prenom?: string | null;
-    }
-  | { error: string };
+type LoginSuccess = {
+  role: "patient" | "doctor" | "receptionist" | "admin";
+  userId: number;
+  email: string;
+  nom: string;
+  prenom?: string | null;
+};
+
+type LoginError = { error: string };
+type LoginResponse = LoginSuccess | LoginError;
+
+function setAuthCookie(res: NextApiResponse, payload: { userId: number; role: string }) {
+  const token = jwt.sign(payload, process.env.JWT_SECRET!, {
+    expiresIn: "7d",
+  });
+
+  res.setHeader(
+    "Set-Cookie",
+    serialize("medflow_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    })
+  );
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -37,12 +58,11 @@ export default async function handler(
 
   try {
     // 1) Patient
-    const patient = await prisma.patient.findFirst({
-      where: { email },
-    });
+    const patient = await prisma.patient.findFirst({ where: { email } });
     if (patient && patient.password) {
       const ok = await bcrypt.compare(password, patient.password);
       if (ok) {
+        setAuthCookie(res, { userId: patient.id, role: "patient" });
         return res.status(200).json({
           role: "patient",
           userId: patient.id,
@@ -54,12 +74,11 @@ export default async function handler(
     }
 
     // 2) Doctor
-    const doctor = await prisma.doctor.findFirst({
-      where: { email },
-    });
+    const doctor = await prisma.doctor.findFirst({ where: { email } });
     if (doctor && doctor.password) {
       const ok = await bcrypt.compare(password, doctor.password);
       if (ok) {
+        setAuthCookie(res, { userId: doctor.id, role: "doctor" });
         return res.status(200).json({
           role: "doctor",
           userId: doctor.id,
@@ -71,12 +90,11 @@ export default async function handler(
     }
 
     // 3) Receptionist
-    const receptionist = await prisma.receptionist.findFirst({
-      where: { email },
-    });
+    const receptionist = await prisma.receptionist.findFirst({ where: { email } });
     if (receptionist && receptionist.password) {
       const ok = await bcrypt.compare(password, receptionist.password);
       if (ok) {
+        setAuthCookie(res, { userId: receptionist.id, role: "receptionist" });
         return res.status(200).json({
           role: "receptionist",
           userId: receptionist.id,
@@ -87,25 +105,23 @@ export default async function handler(
       }
     }
 
-   // 4) Admin (si tu as un modèle Admin avec email/password)
-     const admin = await prisma.admin.findUnique({ where: { email } });
-     if (admin && admin.password) {
-       const ok = await bcrypt.compare(password, admin.password);
-       if (ok) {
+    // 4) Admin
+    const admin = await prisma.admin.findUnique({ where: { email } });
+    if (admin && admin.password) {
+      const ok = await bcrypt.compare(password, admin.password);
+      if (ok) {
+        setAuthCookie(res, { userId: admin.id, role: "admin" });
         return res.status(200).json({
           role: "admin",
-           userId: admin.id,
-           email: admin.email,
-           nom: admin.nom,
-           prenom: admin.prenom,
-         });
-       }
-    } 
+          userId: admin.id,
+          email: admin.email,
+          nom: admin.nom,
+          prenom: admin.prenom,
+        });
+      }
+    }
 
-    // Si on arrive ici : email ou mot de passe incorrect
-    return res
-      .status(401)
-      .json({ error: "Email ou mot de passe incorrect." });
+    return res.status(401).json({ error: "Email ou mot de passe incorrect." });
   } catch (e) {
     console.error("Erreur login:", e);
     return res.status(500).json({ error: "Erreur serveur lors du login." });

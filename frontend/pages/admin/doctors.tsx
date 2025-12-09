@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+/* ============================
+   TYPES
+============================= */
 type Doctor = {
   id: number;
   nom: string;
@@ -17,18 +20,35 @@ type SpecialityCentral = {
   id: number;
   label: string;
   description?: string;
-  clinicId?: number;
+  clinicId?: number; // Optionnel => spécialité générale
 };
 
-type Clinic = { id: number; nom: string };
+type Clinic = {
+  id: number;
+  nom: string;
+};
 
+type FormState = {
+  nom: string;
+  prenom: string;
+  email: string;
+  telephone: string;
+  clinicId: string;
+  specialiteId: string;
+};
+
+/* ============================
+   COMPOSANT PRINCIPAL
+============================= */
 export default function Doctors() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [clinics, setClinics] = useState<Clinic[]>([]);
   const [specialities, setSpecialities] = useState<SpecialityCentral[]>([]);
   const [filteredSpecialities, setFilteredSpecialities] = useState<SpecialityCentral[]>([]);
 
-  const [form, setForm] = useState({
+  const [loading, setLoading] = useState(true);
+
+  const [form, setForm] = useState<FormState>({
     nom: "",
     prenom: "",
     email: "",
@@ -36,60 +56,89 @@ export default function Doctors() {
     clinicId: "",
     specialiteId: "",
   });
-// mes api
+
+  /* ============================
+     FETCH DATA
+  ============================= */
   useEffect(() => {
-    fetch("/api/doctors")
-      .then((res) => res.json())
-      .then((data) => setDoctors(data.doctors ?? []));
+    const fetchAll = async () => {
+      try {
+        const [dRes, cRes, sRes] = await Promise.all([
+          fetch("/api/doctors"),
+          fetch("/api/clinics"),
+          fetch("/api/specialitecentrales"),
+        ]);
 
-    fetch("/api/clinics")
-      .then((res) => res.json())
-      .then((data) => setClinics(data.clinics ?? []));
+        const doctorsData = await dRes.json();
+        const clinicsData = await cRes.json();
+        const specData = await sRes.json();
 
-    fetch("/api/specialitecentrales")
-      .then((res) => res.json())
-      .then((data) => setSpecialities(data.specialities ?? []));
+        setDoctors(doctorsData.doctors ?? []);
+        setClinics(clinicsData.clinics ?? []);
+        setSpecialities(specData.specialities ?? []);
+      } catch (error) {
+        console.error("Erreur de chargement :", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
   }, []);
-// le clinique ou il va travailler 
+
+  /* ============================
+     FILTRAGE SPECIALITÉS
+  ============================= */
   useEffect(() => {
-    if (form.clinicId === "") {
+    if (!form.clinicId) {
       setFilteredSpecialities([]);
       return;
     }
 
     const clinicIdNumber = Number(form.clinicId);
 
-    const filtered = specialities.filter((s) =>
-      s.clinicId ? s.clinicId === clinicIdNumber : true
-    );
+    const filtered = specialities.filter((s) => {
+      // 1) Si la spécialité a une clinique, elle doit correspondre
+      if (s.clinicId) return s.clinicId === clinicIdNumber;
+
+      // 2) Sinon, c’est une spécialité générale => on l'affiche aussi
+      return true;
+    });
 
     setFilteredSpecialities(filtered);
   }, [form.clinicId, specialities]);
 
- 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  /* ============================
+     HANDLERS
+  ============================= */
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
- 
   const addDoctor = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch("/api/doctors", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        clinicId: Number(form.clinicId),
-        specialiteId: Number(form.specialiteId),
-      }),
-    });
+    const payload = {
+      ...form,
+      clinicId: Number(form.clinicId),
+      specialiteId: Number(form.specialiteId),
+    };
 
-    if (res.ok) {
+    try {
+      const res = await fetch("/api/doctors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Erreur lors de l'ajout");
+
       const data = await res.json();
-      setDoctors((d) => [...d, data.doctor]);
+      setDoctors((prev) => [...prev, data.doctor]);
 
-     
+      // reset
       setForm({
         nom: "",
         prenom: "",
@@ -98,22 +147,32 @@ export default function Doctors() {
         clinicId: "",
         specialiteId: "",
       });
-
       setFilteredSpecialities([]);
+    } catch (error) {
+      console.error(error);
     }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Supprimer ce médecin ?")) return;
 
-    const res = await fetch(`/api/doctors/${id}`, { method: "DELETE" });
+    try {
+      const res = await fetch(`/api/doctors/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Erreur suppression");
 
-    if (res.ok) {
       setDoctors((prev) => prev.filter((d) => d.id !== id));
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  // interface 
+  /* ============================
+     UI
+  ============================= */
+  if (loading) {
+    return <p className="text-center py-10 text-gray-500">Chargement...</p>;
+  }
+
   return (
     <div className="p-8">
       <Link href="/admin">
@@ -122,17 +181,20 @@ export default function Doctors() {
         </button>
       </Link>
 
-      <h2 className="text-2xl font-bold mb-4">Gestion des médecins</h2>
+      <h2 className="text-3xl font-semibold mb-6">Gestion des médecins</h2>
 
       {/* FORMULAIRE */}
-      <form className="mb-6 flex gap-2 flex-wrap items-end" onSubmit={addDoctor}>
+      <form
+        className="mb-8 flex flex-wrap gap-4 bg-white p-4 rounded shadow"
+        onSubmit={addDoctor}
+      >
         <input
           name="nom"
           value={form.nom}
           onChange={handleChange}
           required
           placeholder="Nom"
-          className="border p-2 rounded"
+          className="border p-2 rounded w-48"
         />
 
         <input
@@ -141,7 +203,7 @@ export default function Doctors() {
           onChange={handleChange}
           required
           placeholder="Prénom"
-          className="border p-2 rounded"
+          className="border p-2 rounded w-48"
         />
 
         <input
@@ -151,7 +213,7 @@ export default function Doctors() {
           required
           type="email"
           placeholder="Email"
-          className="border p-2 rounded"
+          className="border p-2 rounded w-60"
         />
 
         <input
@@ -159,7 +221,7 @@ export default function Doctors() {
           value={form.telephone}
           onChange={handleChange}
           placeholder="Téléphone"
-          className="border p-2 rounded"
+          className="border p-2 rounded w-40"
         />
 
         {/* CLINIQUE */}
@@ -168,7 +230,7 @@ export default function Doctors() {
           value={form.clinicId}
           onChange={handleChange}
           required
-          className="border p-2 rounded"
+          className="border p-2 rounded w-52"
         >
           <option value="">Choisir une clinique</option>
           {clinics.map((cl) => (
@@ -178,17 +240,17 @@ export default function Doctors() {
           ))}
         </select>
 
-        {/* SPECIALITE */}
+        {/* SPECIALITES */}
         <select
           name="specialiteId"
           value={form.specialiteId}
           onChange={handleChange}
           required
-          className="border p-2 rounded"
-          disabled={form.clinicId === ""}
+          className="border p-2 rounded w-60"
+          disabled={!form.clinicId}
         >
           <option value="">
-            {form.clinicId === "" ? "Choisir une clinique d'abord" : "Choisir la spécialité"}
+            {!form.clinicId ? "Choisir une clinique d'abord" : "Choisir une spécialité"}
           </option>
 
           {filteredSpecialities.map((s) => (
@@ -198,7 +260,7 @@ export default function Doctors() {
           ))}
         </select>
 
-        <button className="bg-blue-700 text-white px-4 py-2 rounded font-bold">
+        <button className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-2 rounded font-semibold">
           Ajouter
         </button>
       </form>
@@ -207,37 +269,37 @@ export default function Doctors() {
       <table className="min-w-full bg-white border rounded shadow">
         <thead className="bg-gray-100">
           <tr>
-            <th className="p-2 text-left">Nom</th>
-            <th className="p-2 text-left">Prénom</th>
-            <th className="p-2 text-left">Clinique</th>
-            <th className="p-2 text-left">Spécialité</th>
-            <th className="p-2 text-left">Email</th>
-            <th className="p-2 text-left">Téléphone</th>
-            <th className="p-2 text-left">Actions</th>
+            <th className="p-3 text-left">Nom</th>
+            <th className="p-3 text-left">Prénom</th>
+            <th className="p-3 text-left">Clinique</th>
+            <th className="p-3 text-left">Spécialité</th>
+            <th className="p-3 text-left">Email</th>
+            <th className="p-3 text-left">Téléphone</th>
+            <th className="p-3 text-left">Actions</th>
           </tr>
         </thead>
 
         <tbody>
           {doctors.length === 0 && (
             <tr>
-              <td colSpan={7} className="p-4 text-center text-gray-400">
-                Aucun médecin.
+              <td colSpan={7} className="p-6 text-center text-gray-400">
+                Aucun médecin disponible.
               </td>
             </tr>
           )}
 
           {doctors.map((doc) => (
-            <tr key={doc.id}>
-              <td>{doc.nom}</td>
-              <td>{doc.prenom}</td>
-              <td>{doc.clinic?.nom ?? "-"}</td>
-              <td>{doc.specialite?.label ?? "-"}</td>
-              <td>{doc.email}</td>
-              <td>{doc.telephone ?? "-"}</td>
-              <td>
+            <tr key={doc.id} className="border-t">
+              <td className="p-3">{doc.nom}</td>
+              <td className="p-3">{doc.prenom}</td>
+              <td className="p-3">{doc.clinic?.nom ?? "-"}</td>
+              <td className="p-3">{doc.specialite?.label ?? "-"}</td>
+              <td className="p-3">{doc.email}</td>
+              <td className="p-3">{doc.telephone ?? "-"}</td>
+              <td className="p-3">
                 <button
                   onClick={() => handleDelete(doc.id)}
-                  className="bg-red-600 text-white rounded px-2 py-1"
+                  className="bg-red-600 hover:bg-red-700 text-white rounded px-3 py-1"
                 >
                   Supprimer
                 </button>

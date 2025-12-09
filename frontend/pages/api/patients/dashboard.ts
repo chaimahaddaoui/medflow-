@@ -1,6 +1,7 @@
 // pages/api/patient/dashboard.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
@@ -9,9 +10,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Méthode non autorisée" });
   }
 
-  const patientId = Number(req.query.patientId);
+  const token = req.cookies.medflow_token;
+  if (!token) {
+    return res.status(401).json({ error: "Non authentifié" });
+  }
+
+  let payload: any;
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET!);
+  } catch {
+    return res.status(401).json({ error: "Token invalide" });
+  }
+
+  if (payload.role !== "patient") {
+    return res.status(403).json({ error: "Réservé aux patients" });
+  }
+
+  const patientId = Number(payload.userId);
   if (!patientId) {
-    return res.status(400).json({ error: "patientId requis" });
+    return res.status(400).json({ error: "patientId invalide dans le token" });
   }
 
   try {

@@ -13,11 +13,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const appointments = await prisma.appointment.findMany({
       where,
-      include: { patient: true, doctor: true },
+      include: {
+        patient: true,
+        doctor: true,
+        bill: true, // <= on charge la facture liée
+      },
       orderBy: { date: "asc" },
     });
 
-    return res.status(200).json({ appointments });
+    const formatted = appointments.map((a) => ({
+      id: a.id,
+      patient: { nom: a.patient.nom, prenom: a.patient.prenom },
+      doctor: { nom: a.doctor.nom },
+      date: a.date.toISOString(),
+      heure: a.heure,
+      statut: a.statut,
+      billId: a.bill?.id ?? null,
+      billStatut: a.bill?.statut ?? null,
+    }));
+
+    return res.status(200).json({ appointments: formatted });
   }
 
   // POST : créer un rendez-vous
@@ -29,7 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      // Vérifier si un RDV existe déjà pour ce médecin, ce jour et cette heure
       const existing = await prisma.appointment.findFirst({
         where: {
           doctorId: Number(doctorId),

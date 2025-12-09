@@ -1,4 +1,4 @@
-// pages/receptionist/appointments/index.tsx
+// pages/receptionist/appointments
 import { useEffect, useState } from "react";
 
 type Appointment = {
@@ -8,6 +8,8 @@ type Appointment = {
   date: string;
   heure: string;
   statut: string;
+  billId?: number | null;
+  billStatut?: string | null;
 };
 
 export default function AppointmentsReception() {
@@ -18,10 +20,37 @@ export default function AppointmentsReception() {
     fetch("/api/appointments")
       .then((r) => r.json())
       .then((d) => setAppointments(d.appointments ?? []))
-      .catch(() => setMsg("Erreur lors du chargement des rendez-vous."));
+      .catch(() =>
+        setMsg("Erreur lors du chargement des rendez-vous.")
+      );
   };
 
   useEffect(fetchAppointments, []);
+
+  const handlePayBill = async (billId: number | null | undefined) => {
+    if (!billId) return;
+
+    try {
+      const res = await fetch(`/api/receptionists/bills/${billId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          statut: "Payée",
+          modePaiement: "Espèces", 
+        }),
+      });
+
+      if (!res.ok) {
+        setMsg("Erreur lors de l'encaissement de la facture.");
+        return;
+      }
+
+      fetchAppointments(); // recharger la liste après encaissement
+    } catch (e) {
+      console.error("Erreur encaissement facture:", e);
+      setMsg("Erreur lors de l'encaissement de la facture.");
+    }
+  };
 
   return (
     <div className="p-6">
@@ -45,6 +74,7 @@ export default function AppointmentsReception() {
             <th className="p-3">Date</th>
             <th className="p-3">Heure</th>
             <th className="p-3">Statut</th>
+            <th className="p-3 text-right">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -70,6 +100,17 @@ export default function AppointmentsReception() {
                 >
                   {ap.statut}
                 </span>
+              </td>
+              <td className="p-3 text-right space-x-2">
+                {/* Bouton Encaisser si une facture existe */}
+                {ap.billId && ap.billStatut !== "Payée" && (
+                  <button
+                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    onClick={() => handlePayBill(ap.billId)}
+                  >
+                    Encaisser
+                  </button>
+                )}
               </td>
             </tr>
           ))}

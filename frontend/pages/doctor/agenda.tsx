@@ -1,6 +1,7 @@
 // pages/doctor/agenda.tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 type Slot = {
   id: number;
@@ -134,6 +135,15 @@ export default function DoctorAgendaPage() {
       {/* Contenu */}
       <main className="flex-1 p-8 space-y-6">
         <h1 className="text-2xl font-bold text-blue-900">Agenda du médecin</h1>
+        {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/doctor">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
 
         {/* Formulaire création de créneau */}
         <section className="bg-white shadow rounded p-6 max-w-xl">

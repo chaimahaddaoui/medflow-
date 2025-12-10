@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
@@ -55,6 +56,15 @@ export default function PrescriptionDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
+       {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/patient">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
       <main className="flex-1 p-6 max-w-3xl mx-auto bg-white rounded shadow">
         <h1 className="text-2xl font-bold text-blue-900 mb-4">
           Ordonnance #{prescription.id}
@@ -90,6 +100,7 @@ export default function PrescriptionDetailPage() {
           Télécharger en PDF
         </button>
       </main>
+      
     </div>
   );
 }

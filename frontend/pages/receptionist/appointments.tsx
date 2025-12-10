@@ -1,4 +1,5 @@
 // pages/receptionist/appointments
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Appointment = {
@@ -55,6 +56,15 @@ export default function AppointmentsReception() {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
+        {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/receptionist">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
         <h1 className="text-2xl font-bold text-blue-900">Rendez-vous</h1>
         <a
           href="/receptionist/appointments/new"

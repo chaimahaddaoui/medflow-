@@ -165,55 +165,7 @@ export default function DoctorPatientDossier() {
           </div>
         </section>
 
-        {/* Historique des rendez-vous */}
-        <section className="bg-white shadow rounded p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-blue-900">
-              Historique des consultations
-            </h2>
-            <button
-              className="bg-green-700 text-white px-3 py-1 rounded text-sm"
-              onClick={() =>
-                router.push(`/doctor/appointments/new?patientId=${patient.id}`)
-              }
-            >
-              Nouveau rendez-vous
-            </button>
-          </div>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-blue-50">
-                <th className="p-3 text-left">Date</th>
-                <th className="p-3 text-left">Statut</th>
-                <th className="p-3 text-left">Motif</th>
-              </tr>
-            </thead>
-            <tbody>
-              {appointments.map((a) => (
-                <tr key={a.id} className="border-b">
-                  <td className="p-3">
-                    {new Date(a.date).toLocaleString("fr-FR", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </td>
-                  <td className="p-3">{a.status || "-"}</td>
-                  <td className="p-3">{(a as any).motif || "-"}</td>
-                </tr>
-              ))}
-              {appointments.length === 0 && (
-                <tr>
-                  <td className="p-3 text-center text-gray-500" colSpan={3}>
-                    Aucune consultation pour le moment.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </section>
+        
 
         {/* Ordonnances */}
         <section className="bg-white shadow rounded p-6">

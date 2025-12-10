@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type Patient = {
@@ -205,6 +206,15 @@ export default function NewAppointmentReception() {
 
     return (
       <div className="p-6 max-w-5xl mx-auto">
+        {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/receptionist">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
         <h1 className="text-3xl font-bold mb-6">Créer un rendez-vous</h1>
   
         {msg && (

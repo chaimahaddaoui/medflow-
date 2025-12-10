@@ -1,4 +1,5 @@
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function NewPatientReception() {
@@ -56,6 +57,15 @@ export default function NewPatientReception() {
 
   return (
     <div className="p-6 max-w-md mx-auto">
+      {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/receptionist">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
       <h1 className="text-xl font-bold mb-4 text-blue-800">Nouveau patient</h1>
       
       {msg && (

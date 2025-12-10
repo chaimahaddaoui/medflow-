@@ -19,7 +19,7 @@ MedFlow est une application web fullstack destinée à la gestion des rendez‑v
 
 
 ### 1. Cloner le dépôt
-git clone <URL_DU_REPO>
+git clone <https://github.com/chaimahaddaoui/medflow-.git>
 cd medflow/frontend
 
 ### 2. Installer les dépendances
@@ -33,6 +33,7 @@ DATABASE_URL="postgresql://user:password@localhost:5432/medflow"
 SMTP_USER="ton_email@gmail.com"
 SMTP_PASS="mot_de_passe_ou_app_password"
 APP_URL="http://localhost:3000"
+
 --> Adapter `user`, `password`, `host`, `port`, `dbname` selon ta base PostgreSQL.
 
 ### 4. Initialiser la base de données
@@ -111,13 +112,21 @@ npm run dev
 
 ## Exemple de modèle Prisma 
 model Clinic {
+
 id Int @id @default(autoincrement())
+
 nom String
+
 adresse String
+
 telephone String
+
 email String
+
 doctors Doctor[]
+
 patients Patient[]
+
 }
 
 ## Sécurité

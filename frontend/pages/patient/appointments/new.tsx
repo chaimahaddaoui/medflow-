@@ -1,6 +1,7 @@
 // pages/patient/appointments/new.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/dist/client/link";
 
 type Doctor = {
   id: number;
@@ -208,7 +209,15 @@ export default function PatientNewAppointmentPage() {
         <h1 className="text-2xl font-bold text-blue-900 mb-4">
           Prendre un rendez-vous
         </h1>
-
+    {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/patient">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
         {msg && (
           <div className="mb-4 text-sm font-semibold text-red-600">{msg}</div>
         )}

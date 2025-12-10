@@ -5,6 +5,7 @@ import {
   CurrencyDollarIcon,
   CalendarDaysIcon
 } from "@heroicons/react/24/outline";
+import Link from 'next/link';
 
 interface Stats {
   totalPatients: number;
@@ -89,10 +90,20 @@ export default function StatisticsAdmin() {
               ))}
             </tbody>
           </table>
+          
         </div>
 
         {/* REVENUS PAR MOIS */}
         <div className="bg-white rounded-2xl p-6 shadow">
+          {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/admin">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-4">
             Revenus par mois (12 derniers mois)
           </h3>
@@ -106,6 +117,7 @@ export default function StatisticsAdmin() {
               ))}
             </tbody>
           </table>
+          
         </div>
 
       </div>

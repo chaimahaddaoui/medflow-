@@ -1,4 +1,5 @@
 // pages/patient/bills/index.tsx
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type AppointmentInfo = {
@@ -49,7 +50,15 @@ export default function PatientBillsPage() {
         <h1 className="text-2xl font-bold text-blue-900 mb-4">
           Mes factures
         </h1>
-
+ {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/patient">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
         {msg && (
           <div className="mb-4 text-red-600 text-sm font-semibold">{msg}</div>
         )}

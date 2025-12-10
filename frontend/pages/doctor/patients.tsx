@@ -1,4 +1,5 @@
 // pages/doctor/patients.tsx
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type DoctorPatient = {
@@ -29,6 +30,10 @@ export default function DoctorPatientsPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
+      {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      
+    </div>
       {/* Sidebar simplifiée, identique au dashboard doctor */}
       <aside className="w-60 bg-blue-900 text-white flex flex-col">
         <div className="p-4 text-xl font-bold border-b border-blue-800">
@@ -51,7 +56,12 @@ export default function DoctorPatientsPage() {
         <h1 className="text-2xl font-bold text-blue-900 mb-6">
           Dossiers patients
         </h1>
-
+<Link href="/doctor">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
         {loading ? (
           <div>Chargement...</div>
         ) : (

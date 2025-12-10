@@ -1,4 +1,5 @@
 // pages/patient/prescriptions/index.tsx
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 type Doctor = {
@@ -45,6 +46,15 @@ export default function PatientPrescriptionsPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex">
       <main className="flex-1 p-6 max-w-4xl mx-auto">
+         {/* BOUTON RETOUR */}
+    <div className="mb-6">
+      <Link href="/patient">
+        <button className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
+          <span className="mr-2 text-lg">←</span>
+          Retour au Dashboard
+        </button>
+      </Link>
+    </div>
         <h1 className="text-2xl font-bold text-blue-900 mb-4">
           Mes ordonnances
         </h1>
